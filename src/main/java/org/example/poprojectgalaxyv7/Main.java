@@ -18,24 +18,77 @@ public class Main extends Application {
 
     static HashMap<Integer, Circle> arrayCircles = new HashMap<>();
 
-    int r = 45;
-    int countPlanets = 20;
+
+    int starsCount = 5;
+
+    int planetsCount = 15;
+
+    int lineCount = 1000;
 
     @Override
     public void start(Stage primaryStage) {
 
         Pane root = new Pane();
 
+        int circleId = 0;
+
+        for (int i = 0; i < starsCount; i++) {
+            int starX = random.nextInt(2,14) * 100 + 50;
+            int starY = random.nextInt(2,7) * 100 + 50;
+            int starRadius = 45;
+            Circle star = new Circle(starX, starY, starRadius);
+            star.setFill(Color.YELLOW);
+            root.getChildren().add(star);
+            arrayCircles.put(circleId++, star);
+
+            double planetAngleRemember = 0;
+            double planetAngle = 0;
+            double angleRemember = 0;
+            double angle = 0;
+
+            int orbitDistance = starRadius + 30;
+
+            for (int j = 0; j < planetsCount; j++) {
+//                int orbitDistance = starRadius + 30 + (j * 40);
 
 
-        for (int i = 0; i < countPlanets; i++) {
-            int x = random.nextInt(1,14) * 100;
-            int y = random.nextInt(1,7) * 100;
-            Circle circle = new Circle(x, y, r);
-            circle.setFill(Color.color(random.nextDouble(), random.nextDouble(), random.nextDouble()));
-            root.getChildren().add(circle);
-            arrayCircles.put(i, circle);
+                if (angleRemember == angle) {
+                    angle = (random.nextDouble()+ 10) * 2 * Math.PI;
+                }
+
+                int planetX = (int) (starX + orbitDistance * Math.cos(angle));
+                int planetY = (int) (starY + orbitDistance * Math.sin(angle));
+
+
+//                int planetX = random.nextInt(1,14) * (starX - starRadius - 10);
+//                int planetY = random.nextInt(1,7) * (starY - starRadius - 10);
+                int planetsRadius = random.nextInt(3,15);
+                Circle planet = new Circle(planetX, planetY, planetsRadius);
+                planet.setFill(Color.color(random.nextDouble(), random.nextDouble(), random.nextDouble()));
+                root.getChildren().add(planet);
+                arrayCircles.put(circleId++, planet);
+
+                int orbitDistanceLine = orbitDistance;
+
+                for(int k = 0; k < lineCount; k++){
+
+                    if (angleRemember == angle) {
+                        angle = (random.nextDouble()+ 10) * 2 * Math.PI;
+                    }
+
+                    int lineX = (int) (starX + orbitDistanceLine * Math.cos(angle));
+                    int lineY = (int) (starY + orbitDistanceLine * Math.sin(angle));
+
+                    Circle line = new Circle(lineX, lineY, 2);
+                    line.setFill(Color.WHITE);
+                    root.getChildren().add(line);
+                }
+                angleRemember = angle;
+                orbitDistance += 15;
+            }
+
         }
+
 
         Scene scene = new Scene(root, 1500, 800);
         root.setStyle("-fx-background-color: black;");
