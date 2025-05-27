@@ -1,6 +1,8 @@
 package org.example.poprojectgalaxyv7;
 
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
+import javafx.stage.Stage;
 
 import java.util.Random;
 

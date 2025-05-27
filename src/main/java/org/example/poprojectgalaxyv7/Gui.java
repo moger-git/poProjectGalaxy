@@ -29,23 +29,23 @@ public class Gui extends Application {
 
     // Organize stars and planets for animation
     private List<Star> stars = new ArrayList<>();
-    
+
     // Planet colors to display in the color table
     private List<Color> planetColors = new ArrayList<>();
 
     private List<Planet> arrayPlanet = new ArrayList<>();
-    
+
     // Scene dimensions
     private final int SCENE_WIDTH = 1700;
     private final int SCENE_HEIGHT = 1000;
-    
+
     // Configuration
     private int starsCount = 5;
     private int maxPlanetsPerStar = 10; // Maximum possible planets per star
     private int minPlanetsPerStar = 1; // Minimum planets per star
     private int maxTries = 100; // Maximum attempts to place a star
     private int screenBorderPadding = 20; // Padding from screen edge
-    
+
     // Sizing parameters
     private int maxStarRadius = 45;
     private int minStarRadius = 25;
@@ -53,10 +53,10 @@ public class Gui extends Application {
     private int minPlanetRadius = 5;
     public int baseOrbitSpacing = 40; // Spacing between orbits
     private int minOrbitSpacing = 20; // Minimum spacing when adapting
-    
+
     // Civilization parameters
     private int civilizationInteractionChance = 2; // % chance per frame of interaction
-    private int powerDisplayDuration = 50; // frames to display power when interacting
+    private int powerDisplayDuration = 120; // frames to display power when interacting
     private HashMap<Circle, Label> powerLabels = new HashMap<>();
 
     // Root pane for galaxy display
@@ -193,7 +193,7 @@ public class Gui extends Application {
             for (Planet planet : star.planets) {
                 Color civColor = planet.civilization.getColor();
                 civilizationCounts.put(civColor,
-                    civilizationCounts.getOrDefault(civColor, 0) + 1);
+                        civilizationCounts.getOrDefault(civColor, 0) + 1);
             }
         }
 
@@ -211,7 +211,7 @@ public class Gui extends Application {
 
             // Create a label for the civilization with planet count
             Label civilizationLabel = new Label("Civ " + (count + 1) + " (" +
-                civilizationCounts.get(civColor) + " planets)");
+                    civilizationCounts.get(civColor) + " planets)");
             civilizationLabel.setTextFill(Color.WHITE);
             civilizationLabel.setFont(Font.font("Arial", 12));
 
@@ -270,7 +270,7 @@ public class Gui extends Application {
                         starRadius -= 5;
                     } else {
                         // Can't reduce any further, try placement anyway
-                        System.out.println("Warning: Star system #" + (i+1) + " is large relative to available space");
+                        System.out.println("Warning: Star system #" + (i + 1) + " is large relative to available space");
                     }
                     continue; // Try again with new parameters
                 }
@@ -291,7 +291,7 @@ public class Gui extends Application {
                     } else if (starRadius > minStarRadius) {
                         starRadius -= 5;
                     } else {
-                        System.out.println("Warning: Cannot place star system #" + (i+1) + " - too large for screen");
+                        System.out.println("Warning: Cannot place star system #" + (i + 1) + " - too large for screen");
                         break; // Can't make it fit, skip this star
                     }
                     continue;
@@ -307,14 +307,14 @@ public class Gui extends Application {
                     boolean overlapping = false;
                     for (Star existingStar : stars) {
                         int existingMaxOrbit = calculateMaxOrbitRadiusForStar(
-                            existingStar.radius,
-                            existingStar.planets.size(),
-                            existingStar.orbitSpacing
+                                existingStar.radius,
+                                existingStar.planets.size(),
+                                existingStar.orbitSpacing
                         );
 
                         double distance = Math.sqrt(
-                            Math.pow(starX - existingStar.x, 2) +
-                            Math.pow(starY - existingStar.y, 2)
+                                Math.pow(starX - existingStar.x, 2) +
+                                        Math.pow(starY - existingStar.y, 2)
                         );
 
                         // Check if orbits would overlap
@@ -363,10 +363,10 @@ public class Gui extends Application {
             }
 
             if (!placementSuccess) {
-                System.out.println("Warning: Failed to place star system #" + (i+1) + " after " + maxTries + " attempts");
+                System.out.println("Warning: Failed to place star system #" + (i + 1) + " after " + maxTries + " attempts");
             } else {
-                System.out.println("Star #" + (i+1) + " placed with " + stars.get(stars.size()-1).planets.size() +
-                                  " planets, radius " + stars.get(stars.size()-1).radius + ", orbit spacing " + stars.get(stars.size()-1).orbitSpacing);
+                System.out.println("Star #" + (i + 1) + " placed with " + stars.get(stars.size() - 1).planets.size() +
+                        " planets, radius " + stars.get(stars.size() - 1).radius + ", orbit spacing " + stars.get(stars.size() - 1).orbitSpacing);
             }
         }
 
@@ -407,7 +407,7 @@ public class Gui extends Application {
             // Calculate speed based on distance from star - farther planets move slower
             // This follows Kepler's laws more closely
             double baseFactor = 0.015;
-            double distanceFactor = (double)(j + 1) / planetCount; // 0.2 for first planet in 5-planet system, 1.0 for last
+            double distanceFactor = (double) (j + 1) / planetCount; // 0.2 for first planet in 5-planet system, 1.0 for last
             double orbitSpeed = baseFactor * (1 - 0.7 * distanceFactor); // Slow down outer planets more
 
             double initialAngle = random.nextDouble() * 2 * Math.PI;
@@ -424,6 +424,7 @@ public class Gui extends Application {
 
             Circle planetCircle = new Circle(planetX, planetY, planetRadius);
             planetCircle.setFill(planetColor);
+            planetCircle.setStroke(Color.BLACK);
             root.getChildren().add(planetCircle);
 
             // Create a civilization for this planet
@@ -441,7 +442,7 @@ public class Gui extends Application {
         // Draw orbit circles with small white dots
         int dotCount = 60;
         for (int i = 0; i < dotCount; i++) {
-            double angle = (i / (double)dotCount) * 2 * Math.PI;
+            double angle = (i / (double) dotCount) * 2 * Math.PI;
             int x = (int) (star.x + orbitDistance * Math.cos(angle));
             int y = (int) (star.y + orbitDistance * Math.sin(angle));
 
@@ -498,25 +499,29 @@ public class Gui extends Application {
 
                     // Calculate distance between planets
                     double distance = Math.sqrt(
-                        Math.pow(planet1.circle.getCenterX() - planet2.circle.getCenterX(), 2) +
-                        Math.pow(planet1.circle.getCenterY() - planet2.circle.getCenterY(), 2)
+                            Math.pow(planet1.circle.getCenterX() - planet2.circle.getCenterX(), 2) +
+                                    Math.pow(planet1.circle.getCenterY() - planet2.circle.getCenterY(), 2)
                     );
 
                     // If planets are close and random chance hits, they interact
                     double interactionDistance = planet1.radius + planet2.radius + 200;
-//                    if (distance < interactionDistance && random.nextInt(100) < civilizationInteractionChance) {
-                    if (random.nextInt(100) < civilizationInteractionChance) {
+                    if (distance < interactionDistance && random.nextInt(100) < civilizationInteractionChance) {
+//                    if (random.nextInt(100) < civilizationInteractionChance) {
                         // Determine if civ1 attacks civ2 or vice versa (random)
                         boolean civ1Attacks = random.nextBoolean();
 
                         Planet attacker = civ1Attacks ? planet1 : planet2;
                         Planet defender = civ1Attacks ? planet2 : planet1;
 
-//                        if () continue;
-
                         // Show power values
                         showPowerValue(attacker, attacker.civilization.getPowerPoints());
                         showPowerValue(defender, defender.civilization.getPowerPoints());
+
+                        attacker.circle.setStroke(Color.RED);
+                        attacker.circle.setStrokeWidth(5);
+                        defender.circle.setStroke(Color.WHITE);
+                        defender.circle.setStrokeWidth(3);
+
 
                         // Process the attack
                         boolean attackSuccess = attacker.civilization.attack(defender.civilization);
@@ -532,8 +537,9 @@ public class Gui extends Application {
                             // After interaction, summon power to win civilizations
                             attacker.civilization.summonCivilization(defender.civilization);
                         }
-
-
+//
+//                        attacker.circle.setStrokeWidth(0);
+//                        defender.circle.setStrokeWidth(0);
 
                         // Update color table to reflect changes
                         updateColorTable();
@@ -582,6 +588,7 @@ public class Gui extends Application {
                         Label powerLabel = powerLabels.get(planet.circle);
                         if (powerLabel != null) {
                             powerLabel.setVisible(false);
+                            strokeUpdate();
                         }
                     }
                 }
@@ -589,7 +596,11 @@ public class Gui extends Application {
         }
     }
 
-
+    private void strokeUpdate() {
+        for (Planet planet : arrayPlanet) {
+            planet.circle.setStroke(Color.BLACK);
+        }
+    }
 
     /*
     private void processStarExplosion(BorderPane root) {
@@ -665,7 +676,6 @@ public class Gui extends Application {
         explosion.play();
     }
     */
-
 
 
     public static void main(String[] args) {
