@@ -1,8 +1,6 @@
 package org.example.poprojectgalaxyv7;
 
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
-import javafx.stage.Stage;
 
 import java.util.Random;
 
@@ -86,17 +84,12 @@ public class Civilization {
         return false;
     }
 
-    /**
-     * Regenerate the power points randomly.
-     */
-//    public void regeneratePower() {
-//        this.powerPoints = generateRandomPower();
-//    }
     public void summonCivilization(Civilization civilization) {
         if ((this.powerPoints > 1000) || (this.powerPoints + civilization.powerPoints > 1000)) {
             this.powerPoints = 1000;
         } else {
             this.powerPoints += civilization.powerPoints;
+            civilization.powerPoints = this.powerPoints;
         }
     }
 

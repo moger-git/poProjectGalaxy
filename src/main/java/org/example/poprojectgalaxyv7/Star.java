@@ -5,11 +5,11 @@ import java.util.List;
 import java.util.Random;
 
 // Star class to track related planets
-public class Star extends Gui{
+public class Star extends Gui {
     double x, y;
     int radius;
     int orbitSpacing;
-    List<Planet> planets = new ArrayList<Planet>();
+    List<Planet> planets = new ArrayList<>();
     List<Integer> orbitDistances = new ArrayList<>();// Track orbit distances
     private static final int MIN_EXPLOSION = 1;
     private static final int MAX_EXPLOSION = 100;

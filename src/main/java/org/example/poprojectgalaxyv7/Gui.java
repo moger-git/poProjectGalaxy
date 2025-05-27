@@ -21,43 +21,41 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
+
 public class Gui extends Application {
 
-    private Random random = new Random();
+    private final Random random = new Random();
 
-    private List<Circle> arrayStars = new ArrayList<>();
+    private final List<Circle> arrayStars = new ArrayList<>();
 
     // Organize stars and planets for animation
-    private List<Star> stars = new ArrayList<>();
+    private final List<Star> stars = new ArrayList<>();
 
-    // Planet colors to display in the color table
-    private List<Color> planetColors = new ArrayList<>();
-
-    private List<Planet> arrayPlanet = new ArrayList<>();
+    private final List<Planet> arrayPlanet = new ArrayList<>();
 
     // Scene dimensions
     private final int SCENE_WIDTH = 1700;
     private final int SCENE_HEIGHT = 1000;
 
     // Configuration
-    private int starsCount = 5;
-    private int maxPlanetsPerStar = 10; // Maximum possible planets per star
-    private int minPlanetsPerStar = 1; // Minimum planets per star
-    private int maxTries = 100; // Maximum attempts to place a star
-    private int screenBorderPadding = 20; // Padding from screen edge
+    private final int starsCount = 5;
+    private final int maxPlanetsPerStar = 10; // Maximum possible planets per star
+    private final int minPlanetsPerStar = 1; // Minimum planets per star
+    private final int maxTries = 100; // Maximum attempts to place a star
+    private final int screenBorderPadding = 20; // Padding from the screen edge
 
     // Sizing parameters
-    private int maxStarRadius = 45;
-    private int minStarRadius = 25;
-    private int maxPlanetRadius = 15;
-    private int minPlanetRadius = 5;
+    private final int maxStarRadius = 45;
+    private final int minStarRadius = 25;
+    private final int maxPlanetRadius = 15;
+    private final int minPlanetRadius = 5;
     public int baseOrbitSpacing = 40; // Spacing between orbits
-    private int minOrbitSpacing = 20; // Minimum spacing when adapting
+    private final int minOrbitSpacing = 20; // Minimum spacing when adapting
 
     // Civilization parameters
-    private int civilizationInteractionChance = 2; // % chance per frame of interaction
-    private int powerDisplayDuration = 120; // frames to display power when interacting
-    private HashMap<Circle, Label> powerLabels = new HashMap<>();
+    private final int civilizationInteractionChance = 2; // % chance per frame of interaction
+    private final int powerDisplayDuration = 120; // frames to display power when interacting
+    private final HashMap<Circle, Label> powerLabels = new HashMap<>();
 
     // Root pane for galaxy display
     private Pane galaxyPane;
@@ -101,22 +99,7 @@ public class Gui extends Application {
         resetButton.setOnAction(e -> resetGalaxy());
 
         // Toggle animation button (Stop/Continue)
-        Button toggleAnimationButton = new Button("Stop");
-        toggleAnimationButton.setStyle("-fx-background-color: #4a4a4a; -fx-text-fill: white; -fx-font-weight: bold;");
-        toggleAnimationButton.setPadding(new Insets(10, 20, 10, 20));
-        toggleAnimationButton.setOnAction(e -> {
-            if (isAnimationRunning) {
-                // Stop animation
-                timer.stop();
-                toggleAnimationButton.setText("Continue");
-                isAnimationRunning = false;
-            } else {
-                // Continue animation
-                timer.start();
-                toggleAnimationButton.setText("Stop");
-                isAnimationRunning = true;
-            }
-        });
+        Button toggleAnimationButton = getButton();
 
         // Add buttons to the container
         buttonContainer.getChildren().addAll(resetButton, toggleAnimationButton);
@@ -145,6 +128,7 @@ public class Gui extends Application {
                 // Process civilization interactions occasionally
                 if (frameCount % 30 == 0) { // Every 30 frames
                     processCivilizationInteractions();
+                    processStarExplosion(root);
                 }
 
                 // Update power display durations
@@ -161,11 +145,30 @@ public class Gui extends Application {
         primaryStage.show();
     }
 
+    private Button getButton() {
+        Button toggleAnimationButton = new Button("Stop");
+        toggleAnimationButton.setStyle("-fx-background-color: #4a4a4a; -fx-text-fill: white; -fx-font-weight: bold;");
+        toggleAnimationButton.setPadding(new Insets(10, 20, 10, 20));
+        toggleAnimationButton.setOnAction(e -> {
+            if (isAnimationRunning) {
+                // Stop animation
+                timer.stop();
+                toggleAnimationButton.setText("Continue");
+                isAnimationRunning = false;
+            } else {
+                // Continue animation
+                timer.start();
+                toggleAnimationButton.setText("Stop");
+                isAnimationRunning = true;
+            }
+        });
+        return toggleAnimationButton;
+    }
+
     private void resetGalaxy() {
         // Clear all existing elements
         galaxyPane.getChildren().clear();
         stars.clear();
-        planetColors.clear();
         powerLabels.clear();
         arrayPlanet.clear();
         arrayStars.clear();
@@ -175,7 +178,7 @@ public class Gui extends Application {
             colorTableContainer.getChildren().remove(1);
         }
 
-        // Create new galaxy
+        // Create a new galaxy
         createGalaxy();
     }
 
@@ -256,7 +259,7 @@ public class Gui extends Application {
             while (!placementSuccess && triesCount < maxTries) {
                 triesCount++;
 
-                // Calculate max orbit radius for this star based on number of planets
+                // Calculate the max orbit radius for this star based on the number of planets
                 int maxOrbitRadius = calculateMaxOrbitRadiusForStar(starRadius, planetsPerStar, orbitSpacing);
 
                 // If the star system is too large, reduce parameters
@@ -331,16 +334,17 @@ public class Gui extends Application {
                         star.orbitSpacing = orbitSpacing;
                         stars.add(star);
 
-                        // First draw all the orbit paths for this star
+                        // First, draw all the orbit paths for this star
                         drawOrbitsForStar(star, galaxyPane, planetsPerStar);
 
                         // Then add the star itself
                         Circle starCircle = new Circle(starX, starY, starRadius);
                         starCircle.setFill(Color.YELLOW);
                         galaxyPane.getChildren().add(starCircle);
+                        arrayStars.add(starCircle);
 
 
-                        // Finally add planets for this star
+                        // Finally, add planets for this star
                         createPlanetsForStar(star, galaxyPane, planetsPerStar);
 
                         placementSuccess = true;
@@ -356,8 +360,6 @@ public class Gui extends Application {
                         orbitSpacing -= 5;
                     } else if (starRadius > minStarRadius) {
                         starRadius -= 5;
-                    } else {
-                        // Can't reduce anymore, will try completely different locations in next iteration
                     }
                 }
             }
@@ -365,8 +367,8 @@ public class Gui extends Application {
             if (!placementSuccess) {
                 System.out.println("Warning: Failed to place star system #" + (i + 1) + " after " + maxTries + " attempts");
             } else {
-                System.out.println("Star #" + (i + 1) + " placed with " + stars.get(stars.size() - 1).planets.size() +
-                        " planets, radius " + stars.get(stars.size() - 1).radius + ", orbit spacing " + stars.get(stars.size() - 1).orbitSpacing);
+                System.out.println("Star #" + (i + 1) + " placed with " + stars.getLast().planets.size() +
+                        " planets, radius " + stars.getLast().radius + ", orbit spacing " + stars.getLast().orbitSpacing);
             }
         }
 
@@ -377,7 +379,7 @@ public class Gui extends Application {
 
     private int calculateMaxOrbitRadiusForStar(int starRadius, int planetCount, int orbitSpacing) {
         // Calculate the maximum orbit radius for a star
-        // First orbit is now at consistent distance: starRadius + orbitSpacing
+        // First orbit is now at a consistent distance: starRadius + orbitSpacing
         return starRadius + (planetCount * orbitSpacing) + maxPlanetRadius;
     }
 
@@ -385,7 +387,7 @@ public class Gui extends Application {
         // Draw all orbits with consistent spacing
         for (int j = 0; j < planetCount; j++) {
             // All orbits are spaced at consistent intervals from the star
-            // First orbit is one full spacing away from star edge
+            // First orbit is one full spacing away from the star edge
             int orbitDistance = star.radius + ((j + 1) * star.orbitSpacing);
             drawOrbitPath(root, star, orbitDistance);
 
@@ -407,12 +409,12 @@ public class Gui extends Application {
             // Calculate speed based on distance from star - farther planets move slower
             // This follows Kepler's laws more closely
             double baseFactor = 0.015;
-            double distanceFactor = (double) (j + 1) / planetCount; // 0.2 for first planet in 5-planet system, 1.0 for last
+            double distanceFactor = (double) (j + 1) / planetCount; // 0.2 for the first planet in the 5-planet system, 1.0 for last
             double orbitSpeed = baseFactor * (1 - 0.7 * distanceFactor); // Slow down outer planets more
 
             double initialAngle = random.nextDouble() * 2 * Math.PI;
 
-            // Create planet at initial position
+            // Create a planet at initial position
             int planetX = (int) (star.x + orbitDistance * Math.cos(initialAngle));
             int planetY = (int) (star.y + orbitDistance * Math.sin(initialAngle));
 
@@ -420,7 +422,7 @@ public class Gui extends Application {
             Color planetColor = Color.color(random.nextDouble(), random.nextDouble(), random.nextDouble());
 
             // Add the color to our list for the color table
-            planetColors.add(planetColor);
+//            planetColors.add(planetColor);
 
             Circle planetCircle = new Circle(planetX, planetY, planetRadius);
             planetCircle.setFill(planetColor);
@@ -430,7 +432,7 @@ public class Gui extends Application {
             // Create a civilization for this planet
             Civilization civilization = new Civilization(planetColor);
 
-            // Add planet to star's collection
+            // Add a planet to star's collection
             Planet planet = new Planet(planetCircle, orbitDistance, initialAngle, orbitSpeed, planetRadius, civilization);
             star.planets.add(planet);
 
@@ -459,7 +461,7 @@ public class Gui extends Application {
                 // Update angle based on orbit speed
                 planet.angle += planet.speed;
 
-                // Calculate new position
+                // Calculate a new position
                 double newX = star.x + planet.orbitDistance * Math.cos(planet.angle);
                 double newY = star.y + planet.orbitDistance * Math.sin(planet.angle);
 
@@ -470,7 +472,7 @@ public class Gui extends Application {
                 // Update civilization color on the circle
                 planet.circle.setFill(planet.civilization.getColor());
 
-                // Update power label position if visible
+                // Update the power label position if visible
                 Label powerLabel = powerLabels.get(planet.circle);
                 if (powerLabel != null && powerLabel.isVisible()) {
                     powerLabel.setLayoutX(newX - powerLabel.getWidth() / 2);
@@ -482,13 +484,13 @@ public class Gui extends Application {
 
     private void processCivilizationInteractions() {
         // For each star, check for close planets that might interact
-        for (Star star : stars) {
+        for (Planet ignored : arrayPlanet) {
             List<Planet> planets = arrayPlanet;
 
             // Only process if there are at least 2 planets
             if (planets.size() < 2) continue;
 
-            // Check each planet against others in same star system
+            // Check each planet against others in the same star system
             for (int i = 0; i < planets.size(); i++) {
                 Planet planet1 = planets.get(i);
 
@@ -504,7 +506,7 @@ public class Gui extends Application {
                     );
 
                     // If planets are close and random chance hits, they interact
-                    double interactionDistance = planet1.radius + planet2.radius + 200;
+                    double interactionDistance = planet1.radius + planet2.radius + 300;
                     if (distance < interactionDistance && random.nextInt(100) < civilizationInteractionChance) {
 //                    if (random.nextInt(100) < civilizationInteractionChance) {
                         // Determine if civ1 attacks civ2 or vice versa (random)
@@ -513,22 +515,28 @@ public class Gui extends Application {
                         Planet attacker = civ1Attacks ? planet1 : planet2;
                         Planet defender = civ1Attacks ? planet2 : planet1;
 
-                        // Show power values
-                        showPowerValue(attacker, attacker.civilization.getPowerPoints());
-                        showPowerValue(defender, defender.civilization.getPowerPoints());
 
-                        attacker.circle.setStroke(Color.RED);
-                        attacker.circle.setStrokeWidth(5);
-                        defender.circle.setStroke(Color.WHITE);
-                        defender.circle.setStrokeWidth(3);
+                        if (attacker.circle.getFill() == Color.WHITE) {
+                            attacker.circle.setStroke(Color.DARKRED);
+                        } else {
+                            attacker.circle.setStroke(Color.RED);
+                        }
+                        attacker.circle.setStrokeWidth(2);
+
+                        if (defender.circle.getFill() == Color.WHITE) {
+                            defender.circle.setStroke(Color.GRAY);
+                        } else {
+                            defender.circle.setStroke(Color.WHITE);
+                        }
+                        defender.circle.setStrokeWidth(2);
 
 
                         // Process the attack
                         boolean attackSuccess = attacker.civilization.attack(defender.civilization);
 
                         // Show power values
-//                        showPowerValue(attacker, attacker.civilization.getPowerPoints());
-//                        showPowerValue(defender, defender.civilization.getPowerPoints());
+                        showPowerValue(attacker, attacker.civilization.getPowerPoints());
+                        showPowerValue(defender, defender.civilization.getPowerPoints());
 
                         // If attack succeeded, update the defender's planet color
                         if (attackSuccess) {
@@ -536,12 +544,12 @@ public class Gui extends Application {
 
                             // After interaction, summon power to win civilizations
                             attacker.civilization.summonCivilization(defender.civilization);
-                        }
-//
-//                        attacker.circle.setStrokeWidth(0);
-//                        defender.circle.setStrokeWidth(0);
 
-                        // Update color table to reflect changes
+                        }
+
+                        updatePowerCivilization(attacker, attacker.civilization.getPowerPoints());
+
+                        // Update the color table to reflect changes
                         updateColorTable();
                     }
                 }
@@ -550,11 +558,11 @@ public class Gui extends Application {
     }
 
     private void showPowerValue(Planet planet, int power) {
-        // Create or get existing power label
+        // Create or get an existing power label
         Label powerLabel = powerLabels.get(planet.circle);
 
         if (powerLabel == null) {
-            // Create new label
+            // Create a new label
             powerLabel = new Label(String.valueOf(power));
             powerLabel.setTextFill(Color.WHITE);
             powerLabel.setStyle("-fx-background-color: rgba(0,0,0,0.7); -fx-padding: 2px 5px; -fx-background-radius: 3;");
@@ -572,7 +580,7 @@ public class Gui extends Application {
             powerLabel.setVisible(true);
         }
 
-        // Set remaining display time
+        // Set the remaining display time
         planet.powerDisplayTime = powerDisplayDuration;
     }
 
@@ -602,16 +610,25 @@ public class Gui extends Application {
         }
     }
 
-    /*
-    private void processStarExplosion(BorderPane root) {
-        Star star = stars.get(random.nextInt(stars.size()));
-        if (star.explosionPoints >= 100){
-            explodeStar(root, (Circle) stars);
-
+    public void updatePowerCivilization(Planet attacker, int power) {
+        for (Planet planet : arrayPlanet) {
+            if (planet.civilization.idCivilization == attacker.civilization.idCivilization) {
+                planet.civilization.setPowerPoints(power);
+            }
         }
     }
 
+    //For star explosion, check if explosion points >= 100
+    private void processStarExplosion(BorderPane root) {
+        Circle explosionStar = arrayStars.get(random.nextInt(arrayStars.size()));
+        for (Star star : stars) {
+            if (star.explosionPoints >= 100) {
+                explodeStar(root, explosionStar);
+            }
+        }
+    }
 
+    //For star explosion
     public static void explodeStar(BorderPane root, Circle stars) {
         // Remove the original circle from the scene
         root.getChildren().remove(stars);
@@ -628,7 +645,7 @@ public class Gui extends Application {
         for (int i = 0; i < particleCount; i++) {
             Circle particle = new Circle(radius / 4);
             particle.setFill(color);
-            particle.setCenterX(stars.getCenterX());
+            particle.setCenterX(stars.getCenterX() + 175);
             particle.setCenterY(stars.getCenterY());
 
             // Add some variation to particle colors
@@ -668,14 +685,11 @@ public class Gui extends Application {
         }
 
         // When animation finishes, remove all particles
-        explosion.setOnFinished(e -> {
-            root.getChildren().removeAll(particles);
-        });
+        explosion.setOnFinished(e -> root.getChildren().removeAll(particles));
 
         // Play the explosion animation
         explosion.play();
     }
-    */
 
 
     public static void main(String[] args) {
