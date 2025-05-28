@@ -1,5 +1,5 @@
 package org.example.poprojectgalaxyv7;
-
+    
 import javafx.animation.*;
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -7,50 +7,65 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
-
 import javafx.util.Duration;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
+public class Gui extends Application implements SimulationConfig {
+    
+    private VBox createParameterSlider(String name, double min, double max, double initialValue, javafx.util.Callback<Number, Void> updateCallback) {
+        VBox container = new VBox(5);
 
-public class Gui extends Application {
+        // Create label with current value
+        Label label = new Label(name + ": " + (int)initialValue);
+        label.setTextFill(Color.WHITE);
+
+        // Create slider
+        Slider slider = new Slider(min, max, initialValue);
+        slider.setShowTickMarks(true);
+        slider.setShowTickLabels(true);
+        slider.setMajorTickUnit((max - min) / 4);
+        slider.setBlockIncrement(1);
+        slider.setSnapToTicks(true);
+
+        // Make slider snap to integer values
+        slider.valueProperty().addListener((obs, oldVal, newVal) -> {
+            int roundedValue = (int) Math.round(newVal.doubleValue());
+            slider.setValue(roundedValue);
+            label.setText(name + ": " + roundedValue);
+            updateCallback.call(roundedValue);
+        });
+
+        // Create tooltip
+        Tooltip tooltip = new Tooltip("Adjust " + name.toLowerCase());
+        Tooltip.install(slider, tooltip);
+
+        // Add elements to container
+        container.getChildren().addAll(label, slider);
+        return container;
+    }
 
     private final Random random = new Random();
-
     private final List<Circle> arrayStars = new ArrayList<>();
 
     // Organize stars and planets for animation
     private final List<Star> stars = new ArrayList<>();
-
     private final List<Planet> arrayPlanet = new ArrayList<>();
 
-    // Scene dimensions
-    private final int SCENE_WIDTH = 1700;
-    private final int SCENE_HEIGHT = 1000;
-
-    // Configuration
-    private final int starsCount = 5;
-    private final int maxPlanetsPerStar = 10; // Maximum possible planets per star
-    private final int minPlanetsPerStar = 1; // Minimum planets per star
-    private final int maxTries = 100; // Maximum attempts to place a star
-    private final int screenBorderPadding = 20; // Padding from the screen edge
-
-    // Sizing parameters
-    private final int maxStarRadius = 45;
-    private final int minStarRadius = 25;
-    private final int maxPlanetRadius = 15;
-    private final int minPlanetRadius = 5;
-    public int baseOrbitSpacing = 40; // Spacing between orbits
-    private final int minOrbitSpacing = 20; // Minimum spacing when adapting
+    // Mutable simulation parameters
+    private int starsCount = DEFAULT_STARS_COUNT;
+    private int maxPlanetsPerStar = DEFAULT_MAX_PLANETS;
+    private int minPlanetsPerStar = DEFAULT_MIN_PLANETS;
 
     // Civilization parameters
     private final int civilizationInteractionChance = 2; // % chance per frame of interaction
@@ -87,6 +102,42 @@ public class Gui extends Application {
         colorTableTitle.setPadding(new Insets(0, 0, 10, 0));
         colorTableContainer.getChildren().add(colorTableTitle);
 
+        // Create sliders for configuration parameters
+        VBox slidersContainer = new VBox(15);
+        slidersContainer.setPadding(new Insets(15));
+        slidersContainer.setStyle("-fx-background-color: rgba(20, 20, 20, 0.7); -fx-border-color: #444444; -fx-border-width: 1;");
+
+        // Add title for a sliders section
+        Label slidersTitle = new Label("Simulation Parameters");
+        slidersTitle.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        slidersTitle.setTextFill(Color.WHITE);
+        slidersTitle.setPadding(new Insets(0, 0, 10, 0));
+        slidersContainer.getChildren().add(slidersTitle);
+
+        // Create sliders for configuration
+        slidersContainer.getChildren().addAll(
+                createParameterSlider("Stars Count", MIN_STARS_COUNT, MAX_STARS_COUNT, starsCount, value -> {
+                    starsCount = (int) value;
+                    return null;
+                }),
+                createParameterSlider("Min Planets Per Star", MIN_PLANETS_LOWER_BOUND, maxPlanetsPerStar, minPlanetsPerStar, value -> {
+                    minPlanetsPerStar = (int) value;
+                    // Ensure max is never less than min
+                    if (maxPlanetsPerStar < minPlanetsPerStar) {
+                        maxPlanetsPerStar = minPlanetsPerStar;
+                    }
+                    return null;
+                }),
+                createParameterSlider("Max Planets Per Star", minPlanetsPerStar, MAX_PLANETS_UPPER_BOUND, maxPlanetsPerStar, value -> {
+                    maxPlanetsPerStar = (int) value;
+                    // Ensure min is never more than max
+                    if (minPlanetsPerStar > maxPlanetsPerStar) {
+                        minPlanetsPerStar = maxPlanetsPerStar;
+                    }
+                    return null;
+                })
+        );
+
         // Create buttons for the bottom left corner
         VBox buttonContainer = new VBox(10);
         buttonContainer.setPadding(new Insets(15));
@@ -106,7 +157,12 @@ public class Gui extends Application {
 
         // Create a BorderPane to arrange elements properly in the left region
         BorderPane leftPane = new BorderPane();
-        leftPane.setTop(colorTableContainer);
+
+        // Create a VBox to hold both color table and sliders in the top area
+        VBox topContainer = new VBox(20);
+        topContainer.getChildren().addAll(colorTableContainer, slidersContainer);
+
+        leftPane.setTop(topContainer);
         leftPane.setBottom(buttonContainer);
         leftPane.setStyle("-fx-background-color: black;");
 
@@ -145,6 +201,7 @@ public class Gui extends Application {
         primaryStage.show();
     }
 
+    // Rest of the class remains the same...
     private Button getButton() {
         Button toggleAnimationButton = new Button("Stop");
         toggleAnimationButton.setStyle("-fx-background-color: #4a4a4a; -fx-text-fill: white; -fx-font-weight: bold;");
@@ -329,8 +386,13 @@ public class Gui extends Application {
 
                     // If not overlapping, we found a good position
                     if (!overlapping) {
-                        // Create a Star object for tracking
-                        Star star = new Star(starX, starY, starRadius);
+                        // Create a Star object for tracking - randomly either Volatile or Stable
+                        Star star;
+                        if (random.nextBoolean()) {
+                            star = new VolitileStar(starX, starY, starRadius);
+                        } else {
+                            star = new StableStar(starX, starY, starRadius);
+                        }
                         star.orbitSpacing = orbitSpacing;
                         stars.add(star);
 
@@ -339,9 +401,10 @@ public class Gui extends Application {
 
                         // Then add the star itself
                         Circle starCircle = new Circle(starX, starY, starRadius);
-                        starCircle.setFill(Color.YELLOW);
+                        starCircle.setFill(star instanceof VolitileStar ? Color.ORANGE : Color.YELLOW);
                         galaxyPane.getChildren().add(starCircle);
                         arrayStars.add(starCircle);
+                        star.setStarCircle(starCircle);
 
 
                         // Finally, add planets for this star
@@ -506,9 +569,9 @@ public class Gui extends Application {
                     );
 
                     // If planets are close and random chance hits, they interact
-                    double interactionDistance = planet1.radius + planet2.radius + 300;
-                    if (distance < interactionDistance && random.nextInt(100) < civilizationInteractionChance) {
-//                    if (random.nextInt(100) < civilizationInteractionChance) {
+                    double interactionDistance = planet1.radius + planet2.radius + 350;
+                    if (distance <= interactionDistance && random.nextInt(100) < civilizationInteractionChance) {
+//
                         // Determine if civ1 attacks civ2 or vice versa (random)
                         boolean civ1Attacks = random.nextBoolean();
 
@@ -618,35 +681,66 @@ public class Gui extends Application {
         }
     }
 
-    //For star explosion, check if explosion points >= 100
+    //For star explosion, check if explosion points >= 100 and increment points for volatile stars
     private void processStarExplosion(BorderPane root) {
-        Circle explosionStar = arrayStars.get(random.nextInt(arrayStars.size()));
+        // First, increment explosion points for all volatile stars
         for (Star star : stars) {
-            if (star.explosionPoints >= 100) {
-                explodeStar(root, explosionStar);
+            star.incrementExplosionPoints();
+        }
+
+        // Then check for any stars that can explode
+        List<Star> starsToExplode = new ArrayList<>();
+        for (Star star : stars) {
+            if (star.canExplode()) {
+                starsToExplode.add(star);
             }
+        }
+
+        // Explode stars that reached the threshold
+        for (Star star : starsToExplode) {
+            explodeStar(root, star);
         }
     }
 
-    //For star explosion
-    public static void explodeStar(BorderPane root, Circle stars) {
+    // For star explosion - now takes the actual Star object
+    private void explodeStar(BorderPane root, Star star) {
         // Remove the original circle from the scene
-        root.getChildren().remove(stars);
+        galaxyPane.getChildren().remove(star.starCircle);
+        arrayStars.remove(star.starCircle);
+
+        // Remove all planets associated with this star
+        List<Planet> planetsToRemove = new ArrayList<>(star.planets);
+        for (Planet planet : planetsToRemove) {
+            // Remove planet from the scene
+            galaxyPane.getChildren().remove(planet.circle);
+
+            // Remove any power labels
+            Label powerLabel = powerLabels.get(planet.circle);
+            if (powerLabel != null) {
+                galaxyPane.getChildren().remove(powerLabel);
+                powerLabels.remove(planet.circle);
+            }
+
+            // Remove from global planet list
+            arrayPlanet.remove(planet);
+        }
+
+        // Clear the star's planet list
+        star.planets.clear();
 
         // Create a list to hold all explosion particles
         List<Circle> particles = new ArrayList<>();
-        Random random = new Random();
 
         // Create explosion particles
         int particleCount = 20;
-        double radius = stars.getRadius();
-        Color color = (Color) stars.getFill();
+        double radius = star.radius;
+        Color color = (Color) star.starCircle.getFill();
 
         for (int i = 0; i < particleCount; i++) {
             Circle particle = new Circle(radius / 4);
             particle.setFill(color);
-            particle.setCenterX(stars.getCenterX() + 175);
-            particle.setCenterY(stars.getCenterY());
+            particle.setCenterX(star.x);
+            particle.setCenterY(star.y);
 
             // Add some variation to particle colors
             if (random.nextDouble() > 0.7) {
@@ -656,7 +750,7 @@ public class Gui extends Application {
             }
 
             particles.add(particle);
-            root.getChildren().add(particle);
+            galaxyPane.getChildren().add(particle);
         }
 
         // Create animations for each particle
@@ -684,15 +778,27 @@ public class Gui extends Application {
             explosion.getKeyFrames().add(keyFrame);
         }
 
-        // When animation finishes, remove all particles
-        explosion.setOnFinished(e -> root.getChildren().removeAll(particles));
+        // When animation finishes, remove all particles and reset the star
+        explosion.setOnFinished(e -> {
+            galaxyPane.getChildren().removeAll(particles);
+
+            // Reset the star's explosion points to 1
+            star.explosionPoints = 1;
+
+            // Remove star from stars list
+            stars.remove(star);
+
+            // Update the color table to reflect the changes
+            updateColorTable();
+        });
 
         // Play the explosion animation
         explosion.play();
     }
 
-
     public static void main(String[] args) {
         launch(args);
     }
+
+    
 }
