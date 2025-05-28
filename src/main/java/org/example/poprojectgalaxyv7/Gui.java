@@ -22,19 +22,19 @@ import java.util.List;
 import java.util.Random;
 
 public class Gui extends Application implements SimulationConfig {
-    
-    private VBox createParameterSlider(String name, double min, double max, double initialValue, javafx.util.Callback<Number, Void> updateCallback) {
+
+    private VBox createParameterSlider(String name, int min, int max, int initialValue, javafx.util.Callback<Number, Void> updateCallback) {
         VBox container = new VBox(5);
 
         // Create label with current value
-        Label label = new Label(name + ": " + (int)initialValue);
+        Label label = new Label(name + ": " + initialValue);
         label.setTextFill(Color.WHITE);
 
         // Create slider
         Slider slider = new Slider(min, max, initialValue);
-        slider.setShowTickMarks(true);
+//        slider.setShowTickMarks(true);
         slider.setShowTickLabels(true);
-        slider.setMajorTickUnit((max - min) / 4);
+        slider.setMajorTickUnit((double) (max - min) / 3);
         slider.setBlockIncrement(1);
         slider.setSnapToTicks(true);
 
@@ -50,13 +50,12 @@ public class Gui extends Application implements SimulationConfig {
         Tooltip tooltip = new Tooltip("Adjust " + name.toLowerCase());
         Tooltip.install(slider, tooltip);
 
-        // Add elements to container
+        // Add elements to a container
         container.getChildren().addAll(label, slider);
         return container;
     }
 
     private final Random random = new Random();
-    private final List<Circle> arrayStars = new ArrayList<>();
 
     // Organize stars and planets for animation
     private final List<Star> stars = new ArrayList<>();
@@ -67,9 +66,6 @@ public class Gui extends Application implements SimulationConfig {
     private int maxPlanetsPerStar = DEFAULT_MAX_PLANETS;
     private int minPlanetsPerStar = DEFAULT_MIN_PLANETS;
 
-    // Civilization parameters
-    private final int civilizationInteractionChance = 2; // % chance per frame of interaction
-    private final int powerDisplayDuration = 120; // frames to display power when interacting
     private final HashMap<Circle, Label> powerLabels = new HashMap<>();
 
     // Root pane for galaxy display
@@ -201,7 +197,7 @@ public class Gui extends Application implements SimulationConfig {
         primaryStage.show();
     }
 
-    // Rest of the class remains the same...
+    // The rest of the class remains the same...
     private Button getButton() {
         Button toggleAnimationButton = new Button("Stop");
         toggleAnimationButton.setStyle("-fx-background-color: #4a4a4a; -fx-text-fill: white; -fx-font-weight: bold;");
@@ -228,7 +224,6 @@ public class Gui extends Application implements SimulationConfig {
         stars.clear();
         powerLabels.clear();
         arrayPlanet.clear();
-        arrayStars.clear();
 
         // Clear color table contents (except the title)
         while (colorTableContainer.getChildren().size() > 1) {
@@ -283,7 +278,7 @@ public class Gui extends Application implements SimulationConfig {
 
             count++;
             // Limit the number of civilizations shown to prevent UI overflow
-            if (count >= 19 && civilizationCounts.size() > 20) {
+            if (count >= 17 && civilizationCounts.size() > 20) {
                 Label moreLabel = new Label("+" + (civilizationCounts.size() - 20) + " more civilizations");
                 moreLabel.setTextFill(Color.LIGHTGRAY);
                 moreLabel.setFont(Font.font("Arial", FontWeight.BOLD, 12));
@@ -403,7 +398,6 @@ public class Gui extends Application implements SimulationConfig {
                         Circle starCircle = new Circle(starX, starY, starRadius);
                         starCircle.setFill(star instanceof VolitileStar ? Color.ORANGE : Color.YELLOW);
                         galaxyPane.getChildren().add(starCircle);
-                        arrayStars.add(starCircle);
                         star.setStarCircle(starCircle);
 
 
@@ -579,7 +573,7 @@ public class Gui extends Application implements SimulationConfig {
                         Planet defender = civ1Attacks ? planet2 : planet1;
 
 
-                        if (attacker.circle.getFill() == Color.WHITE) {
+                        if (attacker.circle.getFill() == Color.RED) {
                             attacker.circle.setStroke(Color.DARKRED);
                         } else {
                             attacker.circle.setStroke(Color.RED);
@@ -703,15 +697,14 @@ public class Gui extends Application implements SimulationConfig {
     }
 
     // For star explosion - now takes the actual Star object
-    private void explodeStar(BorderPane root, Star star) {
+    private void explodeStar(BorderPane ignoredRoot, Star star) {
         // Remove the original circle from the scene
         galaxyPane.getChildren().remove(star.starCircle);
-        arrayStars.remove(star.starCircle);
 
         // Remove all planets associated with this star
         List<Planet> planetsToRemove = new ArrayList<>(star.planets);
         for (Planet planet : planetsToRemove) {
-            // Remove planet from the scene
+            // Remove a planet from the scene
             galaxyPane.getChildren().remove(planet.circle);
 
             // Remove any power labels
@@ -721,7 +714,7 @@ public class Gui extends Application implements SimulationConfig {
                 powerLabels.remove(planet.circle);
             }
 
-            // Remove from global planet list
+            // Remove from a global planet list
             arrayPlanet.remove(planet);
         }
 
@@ -785,7 +778,7 @@ public class Gui extends Application implements SimulationConfig {
             // Reset the star's explosion points to 1
             star.explosionPoints = 1;
 
-            // Remove star from stars list
+            // Remove a star from a star list
             stars.remove(star);
 
             // Update the color table to reflect the changes

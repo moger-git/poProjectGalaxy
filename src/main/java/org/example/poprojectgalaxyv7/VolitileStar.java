@@ -1,7 +1,5 @@
 package org.example.poprojectgalaxyv7;
 
-import javafx.scene.paint.Color;
-
 public class VolitileStar extends Star {
     public VolitileStar(double x, double y, int radius) {
         super(x, y, radius);

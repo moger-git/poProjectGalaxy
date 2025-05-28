@@ -76,7 +76,7 @@ public class Civilization {
      * @return true if the attack was successful, false otherwise
      */
     public boolean attack(Civilization target) {
-        if (this.powerPoints > target.powerPoints) {
+        if (this.powerPoints >= target.powerPoints) {
             target.setColor(this.color);
             target.idCivilization = this.idCivilization;
             return true;
