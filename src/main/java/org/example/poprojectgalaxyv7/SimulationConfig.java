@@ -2,8 +2,8 @@ package org.example.poprojectgalaxyv7;
 
 interface SimulationConfig {
     // Scene dimensions
-    int SCENE_WIDTH = 1700;
-    int SCENE_HEIGHT = 1000;
+    int SCENE_WIDTH = 1500;
+    int SCENE_HEIGHT = 700;
 
     // Default configuration values
     int DEFAULT_STARS_COUNT = 5;
@@ -32,4 +32,13 @@ interface SimulationConfig {
     // Civilization parameters
     int civilizationInteractionChance = 2; // % chance per frame of interaction
     int powerDisplayDuration = 120; // frames to display power when interacting
+
+    // Simulation speed parameters
+    int DEFAULT_SIMULATION_SPEED = 1; // Default frames per tick
+    int MIN_SIMULATION_SPEED = 1; // Minimum frames per tick
+    int MAX_SIMULATION_SPEED = 10; // Maximum frames per tick
+
+    // File paths
+    String DEFAULT_GALAXY_CONFIG_FILE = "src/main/resources/galaxy_config.csv";
+    String DEFAULT_OUTPUT_DIR = "./";
 }

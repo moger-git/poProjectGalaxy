@@ -14,8 +14,10 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -65,6 +67,7 @@ public class Gui extends Application implements SimulationConfig {
     private int starsCount = DEFAULT_STARS_COUNT;
     private int maxPlanetsPerStar = DEFAULT_MAX_PLANETS;
     private int minPlanetsPerStar = DEFAULT_MIN_PLANETS;
+    private int simulationSpeed = DEFAULT_SIMULATION_SPEED;
 
     private final HashMap<Circle, Label> powerLabels = new HashMap<>();
 
@@ -74,22 +77,26 @@ public class Gui extends Application implements SimulationConfig {
     private AnimationTimer timer;
     private boolean isAnimationRunning = true;
 
+    // Simulation input/output handling
+    private SimulationOutput simulationOutput;
+    private FileChooser fileChooser = new FileChooser();
+
     @Override
     public void start(Stage primaryStage) {
         // Create the main border pane layout
         BorderPane root = new BorderPane();
-        root.setStyle("-fx-background-color: black;");
+        root.setStyle("-fx-background-color: rgba(0,0,0);");
 
         // Create the galaxy pane for the center
         galaxyPane = new Pane();
-        galaxyPane.setStyle("-fx-background-color: black;");
+        galaxyPane.setStyle("-fx-background-color: #000000;");
 
         // Create the color table for the left side
         colorTableContainer = new VBox(10);
         colorTableContainer.setPadding(new Insets(20));
         colorTableContainer.setStyle("-fx-background-color: rgba(0, 0, 0, 0.7); -fx-border-color: #444444; -fx-border-width: 1;");
         colorTableContainer.setAlignment(Pos.TOP_CENTER);
-        colorTableContainer.setPrefWidth(180);
+        colorTableContainer.setPrefWidth(200);
 
         // Add title to color table
         Label colorTableTitle = new Label("Civilizations");
@@ -131,13 +138,17 @@ public class Gui extends Application implements SimulationConfig {
                         minPlanetsPerStar = maxPlanetsPerStar;
                     }
                     return null;
+                }),
+                createParameterSlider("Simulation Speed", MIN_SIMULATION_SPEED, MAX_SIMULATION_SPEED, simulationSpeed, value -> {
+                    simulationSpeed = (int) value;
+                    return null;
                 })
         );
 
-        // Create buttons for the bottom left corner
-        VBox buttonContainer = new VBox(10);
-        buttonContainer.setPadding(new Insets(15));
-        buttonContainer.setAlignment(Pos.BOTTOM_LEFT);
+        // Create buttons for the bottom left corner (control buttons)
+        VBox controlButtonContainer = new VBox(10);
+        controlButtonContainer.setPadding(new Insets(15));
+        controlButtonContainer.setAlignment(Pos.BOTTOM_LEFT);
 
         // Reset button
         Button resetButton = new Button("Reset");
@@ -148,8 +159,38 @@ public class Gui extends Application implements SimulationConfig {
         // Toggle animation button (Stop/Continue)
         Button toggleAnimationButton = getButton();
 
-        // Add buttons to the container
-        buttonContainer.getChildren().addAll(resetButton, toggleAnimationButton);
+        // Add control buttons to the left container
+        controlButtonContainer.getChildren().addAll(resetButton, toggleAnimationButton);
+
+        // Create right panel for file operations
+        VBox rightPanel = new VBox(20);
+        rightPanel.setPadding(new Insets(20));
+        rightPanel.setStyle("-fx-background-color: rgba(20, 20, 20, 0.7); -fx-border-color: #444444; -fx-border-width: 1;");
+        rightPanel.setPrefWidth(180);
+        rightPanel.setAlignment(Pos.TOP_CENTER);
+
+        // Add title for file operations section
+        Label fileOperationsTitle = new Label("File Operations");
+        fileOperationsTitle.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+        fileOperationsTitle.setTextFill(Color.WHITE);
+        fileOperationsTitle.setPadding(new Insets(0, 0, 15, 0));
+
+        // Input configuration file button
+        Button loadConfigButton = new Button("Load Config");
+        loadConfigButton.setStyle("-fx-background-color: #4a4a4a; -fx-text-fill: white; -fx-font-weight: bold;");
+        loadConfigButton.setPadding(new Insets(10, 20, 10, 20));
+        loadConfigButton.setPrefWidth(150);
+        loadConfigButton.setOnAction(e -> loadConfigFromFile(primaryStage));
+
+        // Output file selection button
+        Button setOutputButton = new Button("Set Output File");
+        setOutputButton.setStyle("-fx-background-color: #4a4a4a; -fx-text-fill: white; -fx-font-weight: bold;");
+        setOutputButton.setPadding(new Insets(10, 20, 10, 20));
+        setOutputButton.setPrefWidth(150);
+        setOutputButton.setOnAction(e -> selectOutputFile(primaryStage));
+
+        // Add file buttons to the right panel
+        rightPanel.getChildren().addAll(fileOperationsTitle, loadConfigButton, setOutputButton);
 
         // Create a BorderPane to arrange elements properly in the left region
         BorderPane leftPane = new BorderPane();
@@ -159,34 +200,62 @@ public class Gui extends Application implements SimulationConfig {
         topContainer.getChildren().addAll(colorTableContainer, slidersContainer);
 
         leftPane.setTop(topContainer);
-        leftPane.setBottom(buttonContainer);
+        leftPane.setBottom(controlButtonContainer);
         leftPane.setStyle("-fx-background-color: black;");
 
         // Set up the main layout
         root.setCenter(galaxyPane);
         root.setLeft(leftPane);
+        root.setRight(rightPanel);
+
+        // Try to load default config file if exists
+        File defaultConfig = new File(DEFAULT_GALAXY_CONFIG_FILE);
+        if (defaultConfig.exists()) {
+            InputConfig config = new InputConfig();
+            if (config.loadFromCsv(defaultConfig.getAbsolutePath())) {
+                starsCount = config.getStarsCount();
+                minPlanetsPerStar = config.getMinPlanetsPerStar();
+                maxPlanetsPerStar = config.getMaxPlanetsPerStar();
+                simulationSpeed = config.getSimulationSpeed();
+                System.out.println("Loaded default configuration from " + DEFAULT_GALAXY_CONFIG_FILE);
+            }
+        }
 
         // Create the galaxy
         createGalaxy();
 
+        // Initialize simulation output with default file
+        simulationOutput = new SimulationOutput();
+
         // Animation timer for planet orbits
         timer = new AnimationTimer() {
             private int frameCount = 0;
+            private int tickCounter = 0;
 
             @Override
             public void handle(long now) {
-                updatePlanetPositions();
+                // Only update on specific frames based on simulation speed
+                tickCounter++;
+                if (tickCounter >= simulationSpeed) {
+                    updatePlanetPositions();
 
-                // Process civilization interactions occasionally
-                if (frameCount % 30 == 0) { // Every 30 frames
-                    processCivilizationInteractions();
-                    processStarExplosion(root);
+                    // Process civilization interactions occasionally
+                    if (frameCount % 45 == 0) { // Every 45 frames
+                        processCivilizationInteractions();
+                        processStarExplosion(root);
+
+                        // Record simulation state to CSV
+                        if (simulationOutput != null) {
+                            simulationOutput.recordTick(stars);
+                        }
+                    }
+
+                    // Update power display durations
+                    updatePowerDisplays();
+
+                    frameCount++;
+                    tickCounter = 0;
                 }
-
-                // Update power display durations
-                updatePowerDisplays();
-
-                frameCount++;
             }
         };
         timer.start();
@@ -218,6 +287,52 @@ public class Gui extends Application implements SimulationConfig {
         return toggleAnimationButton;
     }
 
+    private void loadConfigFromFile(Stage stage) {
+        fileChooser.setTitle("Open Configuration File");
+        fileChooser.getExtensionFilters().clear();
+        fileChooser.getExtensionFilters().add(
+            new FileChooser.ExtensionFilter("CSV Files", "*.csv")
+        );
+
+        File file = fileChooser.showOpenDialog(stage);
+        if (file != null) {
+            System.out.println("Selected config file: " + file.getAbsolutePath());
+            InputConfig config = new InputConfig();
+            if (config.loadFromCsv(file.getAbsolutePath())) {
+                // Update simulation parameters
+                starsCount = config.getStarsCount();
+                minPlanetsPerStar = config.getMinPlanetsPerStar();
+                maxPlanetsPerStar = config.getMaxPlanetsPerStar();
+                simulationSpeed = config.getSimulationSpeed();
+
+                System.out.println("Applied configuration:\n" +
+                        "Stars Count: " + starsCount + "\n" +
+                        "Min Planets Per Star: " + minPlanetsPerStar + "\n" +
+                        "Max Planets Per Star: " + maxPlanetsPerStar + "\n" +
+                        "Simulation Speed: " + simulationSpeed);
+
+                // Reset galaxy with new configuration
+                resetGalaxy();
+            } else {
+                System.err.println("Failed to load configuration from " + file.getAbsolutePath());
+            }
+        }
+    }
+
+    private void selectOutputFile(Stage stage) {
+        fileChooser.setTitle("Set Output File");
+        fileChooser.getExtensionFilters().clear();
+        fileChooser.getExtensionFilters().add(
+            new FileChooser.ExtensionFilter("CSV Files", "*.csv")
+        );
+
+        File file = fileChooser.showSaveDialog(stage);
+        if (file != null) {
+            // Create new output handler with selected file
+            simulationOutput = new SimulationOutput(file.getAbsolutePath());
+        }
+    }
+
     private void resetGalaxy() {
         // Clear all existing elements
         galaxyPane.getChildren().clear();
@@ -230,6 +345,9 @@ public class Gui extends Application implements SimulationConfig {
             colorTableContainer.getChildren().remove(1);
         }
 
+        // Reset simulation output with a new file
+        simulationOutput = new SimulationOutput();
+
         // Create a new galaxy
         createGalaxy();
     }
@@ -240,15 +358,19 @@ public class Gui extends Application implements SimulationConfig {
             colorTableContainer.getChildren().remove(1);
         }
 
-        // Create a map to count planets by civilization color
+        // Create maps to count planets and track power by civilization color
         HashMap<Color, Integer> civilizationCounts = new HashMap<>();
+        HashMap<Color, Integer> civilizationPower = new HashMap<>();
 
-        // Count planets for each civilization color
+        // Count planets and get power for each civilization color
         for (Star star : stars) {
             for (Planet planet : star.planets) {
                 Color civColor = planet.civilization.getColor();
                 civilizationCounts.put(civColor,
                         civilizationCounts.getOrDefault(civColor, 0) + 1);
+
+                // Track the power points (we just need one value per civilization)
+                civilizationPower.put(civColor, planet.civilization.getPowerPoints());
             }
         }
 
@@ -264,22 +386,37 @@ public class Gui extends Application implements SimulationConfig {
             colorSample.setStroke(Color.WHITE);
             colorSample.setStrokeWidth(1);
 
-            // Create a label for the civilization with planet count
-            Label civilizationLabel = new Label("Civ " + (count + 1) + " (" +
-                    civilizationCounts.get(civColor) + " planets)");
+            // Create a VBox to hold multiple labels for better formatting
+            VBox labelContainer = new VBox(1);
+
+            // Main civilization label with number
+            Label civilizationLabel = new Label("Civ " + (count + 1));
             civilizationLabel.setTextFill(Color.WHITE);
-            civilizationLabel.setFont(Font.font("Arial", 12));
+            civilizationLabel.setFont(Font.font("Arial", FontWeight.BOLD, 12));
+
+            // Planets count
+            Label planetLabel = new Label("Planets: " + civilizationCounts.get(civColor));
+            planetLabel.setTextFill(Color.LIGHTGRAY);
+            planetLabel.setFont(Font.font("Arial", 10));
+
+            // Power points (highlighted)
+            Label powerLabel = new Label("Power: " + civilizationPower.get(civColor));
+            powerLabel.setTextFill(Color.LIGHTGRAY);
+            powerLabel.setFont(Font.font("Arial", 10));
+
+            labelContainer.getChildren().addAll(civilizationLabel, planetLabel, powerLabel);
 
             // Add to the color entry
-            colorEntry.getChildren().addAll(colorSample, civilizationLabel);
+            colorEntry.getChildren().addAll(colorSample, labelContainer);
 
             // Add to the color table
             colorTableContainer.getChildren().add(colorEntry);
 
+
             count++;
             // Limit the number of civilizations shown to prevent UI overflow
-            if (count >= 17 && civilizationCounts.size() > 20) {
-                Label moreLabel = new Label("+" + (civilizationCounts.size() - 20) + " more civilizations");
+            if (count >= 4 && civilizationCounts.size() > 4) {
+                Label moreLabel = new Label("+" + (civilizationCounts.size() - 4) + " more civilizations");
                 moreLabel.setTextFill(Color.LIGHTGRAY);
                 moreLabel.setFont(Font.font("Arial", FontWeight.BOLD, 12));
                 moreLabel.setPadding(new Insets(5, 0, 0, 0));
@@ -332,7 +469,7 @@ public class Gui extends Application implements SimulationConfig {
 
                 // Ensure the star system fits within the screen by adjusting placement bounds
                 int minX = maxOrbitRadius + screenBorderPadding;
-                int maxX = SCENE_WIDTH - 200 - maxOrbitRadius - screenBorderPadding;
+                int maxX = SCENE_WIDTH - 380 - maxOrbitRadius - screenBorderPadding; // Account for both left and right panels
                 int minY = maxOrbitRadius + screenBorderPadding;
                 int maxY = SCENE_HEIGHT - maxOrbitRadius - screenBorderPadding;
 
@@ -433,7 +570,6 @@ public class Gui extends Application implements SimulationConfig {
         // Update the color table with all planet colors
         updateColorTable();
     }
-
     private int calculateMaxOrbitRadiusForStar(int starRadius, int planetCount, int orbitSpacing) {
         // Calculate the maximum orbit radius for a star
         // First orbit is now at a consistent distance: starRadius + orbitSpacing
@@ -479,7 +615,7 @@ public class Gui extends Application implements SimulationConfig {
             Color planetColor = Color.color(random.nextDouble(), random.nextDouble(), random.nextDouble());
 
             // Add the color to our list for the color table
-//            planetColors.add(planetColor);
+
 
             Circle planetCircle = new Circle(planetX, planetY, planetRadius);
             planetCircle.setFill(planetColor);
@@ -563,7 +699,7 @@ public class Gui extends Application implements SimulationConfig {
                     );
 
                     // If planets are close and random chance hits, they interact
-                    double interactionDistance = planet1.radius + planet2.radius + 350;
+                    double interactionDistance = planet1.radius + planet2.radius + 500;
                     if (distance <= interactionDistance && random.nextInt(100) < civilizationInteractionChance) {
 //
                         // Determine if civ1 attacks civ2 or vice versa (random)

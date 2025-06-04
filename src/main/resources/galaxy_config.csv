@@ -1,0 +1,5 @@
+Parameter,Value
+StarsCount,6
+MinPlanetsPerStar,2
+MaxPlanetsPerStar,8
+SimulationSpeed,2

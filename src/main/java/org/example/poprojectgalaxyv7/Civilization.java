@@ -8,7 +8,7 @@ public class Civilization {
     private Color color;
     private int powerPoints;
     private static final Random random = new Random();
-    private static final int MIN_POWER = 1;
+    private static final int MIN_POWER = 50;
     private static final int MAX_POWER = 100;
     public int idCivilization;
 
@@ -20,7 +20,7 @@ public class Civilization {
     public Civilization(Color color) {
         this.color = color;
         this.powerPoints = generateRandomPower();
-        this.idCivilization = random.nextInt(1000000000);
+        this.idCivilization = random.nextInt(1000);
     }
 
     /**
@@ -88,7 +88,7 @@ public class Civilization {
         if ((this.powerPoints > 1000) || (this.powerPoints + civilization.powerPoints > 1000)) {
             this.powerPoints = 1000;
         } else {
-            this.powerPoints += civilization.powerPoints;
+            this.powerPoints += civilization.powerPoints-30;
             civilization.powerPoints = this.powerPoints;
         }
     }
