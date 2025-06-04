@@ -11,6 +11,7 @@ public abstract class Star extends Gui implements SimulationConfig {
     double x, y;
     int radius;
     int orbitSpacing;
+    // AGGREGATION
     List<Planet> planets = new ArrayList<>();
     List<Integer> orbitDistances = new ArrayList<>();// Track orbit distances
     protected static final int MIN_EXPLOSION = 1;
@@ -18,6 +19,7 @@ public abstract class Star extends Gui implements SimulationConfig {
     protected static final Random random = new Random();
     int explosionPoints;
     int idStar;
+    // COMPOSITION
     Circle starCircle;
 
     public Star(double x, double y, int radius) {
@@ -32,6 +34,7 @@ public abstract class Star extends Gui implements SimulationConfig {
     private int generateRandomExplosion() {
         return random.nextInt(MAX_EXPLOSION - MIN_EXPLOSION + 1) + MIN_EXPLOSION-30;
     }
+    // POLYMORPHISM
     // Method to increment explosion points, to be overridden by subclasses
     public abstract void incrementExplosionPoints();
 

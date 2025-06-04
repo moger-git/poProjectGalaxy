@@ -5,6 +5,7 @@ import javafx.scene.paint.Color;
 import java.util.Random;
 
 public class Civilization {
+    // ENCAPSULATION
     private Color color;
     private int powerPoints;
     private static final Random random = new Random();
@@ -75,6 +76,7 @@ public class Civilization {
      * @param target The civilization being attacked
      * @return true if the attack was successful, false otherwise
      */
+    // POLYMORPHISM
     public boolean attack(Civilization target) {
         if (this.powerPoints >= target.powerPoints) {
             target.setColor(this.color);

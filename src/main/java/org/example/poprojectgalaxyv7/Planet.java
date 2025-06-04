@@ -4,11 +4,13 @@ import javafx.scene.shape.Circle;
 
 // Planet class for animation
 public class Planet extends Gui {
+    //COMPOSITION
     Circle circle;
     double orbitDistance;
     double angle;
     double speed;
     int radius;
+    // COMPOSITION
     Civilization civilization;
     int powerDisplayTime = 0;
 
