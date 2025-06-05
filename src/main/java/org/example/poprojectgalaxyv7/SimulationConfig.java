@@ -1,5 +1,6 @@
 package org.example.poprojectgalaxyv7;
 
+//INTERFACE
 interface SimulationConfig {
     // Scene dimensions
     int SCENE_WIDTH = 1500;
@@ -38,7 +39,6 @@ interface SimulationConfig {
     int MIN_SIMULATION_SPEED = 1; // Minimum frames per tick
     int MAX_SIMULATION_SPEED = 10; // Maximum frames per tick
 
-    // File paths
+    // input file path
     String DEFAULT_GALAXY_CONFIG_FILE = "src/main/resources/galaxy_config.csv";
-    String DEFAULT_OUTPUT_DIR = "./";
 }

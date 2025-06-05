@@ -3,7 +3,7 @@ package org.example.poprojectgalaxyv7;
 import javafx.scene.shape.Circle;
 
 // Planet class for animation
-public class Planet extends Gui {
+public class Planet{
     //COMPOSITION
     Circle circle;
     double orbitDistance;

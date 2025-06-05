@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class InputConfig {
+    //ENCUPSULATION
     private int starsCount;
     private int minPlanetsPerStar;
     private int maxPlanetsPerStar;

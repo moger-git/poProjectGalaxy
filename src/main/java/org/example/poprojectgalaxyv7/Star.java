@@ -6,8 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+// ABSTRACT CLASS
 // Star class to track related planets
-public abstract class Star extends Gui implements SimulationConfig {
+public abstract class Star implements SimulationConfig {
     double x, y;
     int radius;
     int orbitSpacing;

@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
-
+//INHERITANCE
 public class Gui extends Application implements SimulationConfig {
 
     private VBox createParameterSlider(String name, int min, int max, int initialValue, javafx.util.Callback<Number, Void> updateCallback) {

@@ -9,6 +9,7 @@ import java.util.*;
 import javafx.scene.paint.Color;
 
 public class SimulationOutput {
+    //ENCAPSULATION
     private String outputFilePath;
     private int tickCounter;
     private boolean isActive;
